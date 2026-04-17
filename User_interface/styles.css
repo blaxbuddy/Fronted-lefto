@@ -10,50 +10,6 @@
     --danger: #d32f2f;
 }
 
-/* additional_driver_dashboard.css for image_1.png */
-
-/* 1. Header Wrapper and Positioning */
-.dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    max-width: 900px;
-    margin-bottom: 2rem;
-    position: relative; /* ensure absolute positioning inside works */
-}
-
-/* Ensure the existing toggle stays on the right and title is center/right */
-.volunteer-title {
-    order: 0; /* centerish */
-}
-.toggle-container {
-    order: 1; /* right */
-}
-
-/* 2. New Element - Logo Addition on Top Left */
-.top-left-logo-driver {
-    position: absolute; /* Place on top left relative to header */
-    top: 50%;
-    left: 0;
-    transform: translateY(-50%); /* Center vertically */
-    
-    width: 50px;
-    height: 50px;
-    
-    /* 30px rounded edges as requested */
-    border-radius: 30px; 
-    
-    object-fit: cover;
-    
-    /* Optional shadow to match neumorphism */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
-    
-    /* Ensure it has a dummy source for mockup purposes, e.g.
-       <img class="top-left-logo-driver" src="placeholder_green_square.png">
-    */
-}
-
 * {
     box-sizing: border-box;
     margin: 0;
