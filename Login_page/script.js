@@ -114,65 +114,69 @@
 //   document.getElementById('role-selection').classList.remove('hidden');
 // }
 
-// ---------------- Firebase Setup ----------------
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
-
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// ✅ FIX 1: Added databaseURL
+// ✅ FIX 2: Corrected storageBucket to .appspot.com
 const firebaseConfig = {
   apiKey: "AIzaSyDqlO8xiRy4m0-Y3__eM77j7Biup4cJctw",
   authDomain: "lefto-259a9.firebaseapp.com",
+  databaseURL: "https://lefto-259a9-default-rtdb.firebaseio.com",
   projectId: "lefto-259a9",
-  storageBucket: "lefto-259a9.firebasestorage.app",
+  storageBucket: "lefto-259a9.appspot.com",
   messagingSenderId: "369693551767",
   appId: "1:369693551767:web:5542cd993de6a8ec77cdd2",
   measurementId: "G-79MVE0ZJ26"
 };
 
-// Initialize Firebase
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
+const database = getDatabase(app);
+const storage = getStorage(app);
 
 let currentUser = null;
 let selectedRole = null;
 
-// ---------------- Role Selection ----------------
+// ---------- Helper: Upload image and return download URL ----------
+async function uploadImageAndGetURL(file, folderPath) {
+  if (!file) return null;
+  const fileName = `${Date.now()}_${file.name}`;
+  const fullPath = `${folderPath}/${fileName}`;
+  const imageRef = storageRef(storage, fullPath);
+  await uploadBytes(imageRef, file);
+  return await getDownloadURL(imageRef);
+}
+
+// ---------- Role Selection ----------
 function handleRoleSelection(role, formId) {
   selectedRole = role;
   loginWithGoogle(formId);
 }
 
-// ---------------- Firebase Login ----------------
+// ---------- Google Login ----------
 function loginWithGoogle(formId) {
   signInWithPopup(auth, provider)
     .then((result) => {
       currentUser = result.user;
-
-      console.log("Logged in:", currentUser.email);
-      console.log("Role:", selectedRole);
-
+      console.log("✅ Logged in:", currentUser.email);
       showForm(formId);
     })
     .catch((error) => {
-      console.log(error);
+      console.error("❌ Login error:", error.code, error.message);
+      alert("Login failed: " + error.message);
     });
 }
 
-// ---------------- Show Forms ----------------
+// ---------- Show/Hide Forms ----------
 function showForm(formId) {
   document.getElementById('role-selection').classList.add('hidden');
-
   document.getElementById('ngo-form').classList.add('hidden');
   document.getElementById('restaurant-form').classList.add('hidden');
   document.getElementById('volunteer-form').classList.add('hidden');
-
   document.getElementById(formId).classList.remove('hidden');
 }
 
@@ -180,12 +184,12 @@ function showSelection() {
   document.getElementById('ngo-form').classList.add('hidden');
   document.getElementById('restaurant-form').classList.add('hidden');
   document.getElementById('volunteer-form').classList.add('hidden');
-
   document.getElementById('role-selection').classList.remove('hidden');
 }
 
-// ---------------- Submit Functions ----------------
-function submitRestaurant(event) {
+// ---------- Submit Volunteer ----------
+// ✅ FIX 3: Using querySelector by name instead of fragile form[index]
+async function submitVolunteer(event) {
   event.preventDefault();
 
   if (!currentUser) {
@@ -193,19 +197,61 @@ function submitRestaurant(event) {
     return;
   }
 
-  const data = {
-    email: currentUser.email,
-    role: selectedRole,
-    name: event.target[0].value,
-    address: event.target[1].value,
-    phone: event.target[2].value,
-    image: event.target[3].files[0]
-  };
+  const form = event.target;
 
-  console.log("Restaurant:", data);
+  // Grab fields by name — reliable regardless of DOM nesting
+  const fullName     = form.querySelector('[name="fullName"]').value;
+  const phone        = form.querySelector('[name="phone"]').value;
+  const vehicleType  = form.querySelector('[name="vehicleType"]').value;
+  const capacity     = form.querySelector('[name="capacity"]').value;
+  const driverImageFile  = form.querySelector('[name="driverImage"]').files[0];
+  const licenseFile      = form.querySelector('[name="license"]').files[0];
+  const vehicleImageFile = form.querySelector('[name="vehicleImage"]').files[0];
+
+  const submitBtn = form.querySelector('.submit-btn');
+  submitBtn.innerText = "Uploading...";
+  submitBtn.disabled = true;
+
+  try {
+    console.log("📤 Uploading volunteer images...");
+
+    const driverImageURL  = await uploadImageAndGetURL(driverImageFile,  `volunteers/${currentUser.uid}/driver`);
+    const licenseURL      = await uploadImageAndGetURL(licenseFile,       `volunteers/${currentUser.uid}/license`);
+    const vehicleImageURL = await uploadImageAndGetURL(vehicleImageFile,  `volunteers/${currentUser.uid}/vehicle`);
+
+    console.log("📝 Saving volunteer data to DB...");
+
+    const volunteerRef = ref(database, `volunteers/${currentUser.uid}`);
+    await set(volunteerRef, {
+      uid: currentUser.uid,
+      email: currentUser.email,
+      role: selectedRole,
+      fullName,
+      phone,
+      vehicleType,
+      carryingCapacity: capacity,
+      driverImageURL,
+      licenseImageURL: licenseURL,
+      vehicleImageURL,
+      timestamp: Date.now()
+    });
+
+    console.log("✅ Volunteer saved successfully!");
+    alert("Volunteer registration successful!");
+    form.reset();
+    showSelection();
+
+  } catch (error) {
+    console.error("❌ Volunteer submission error:", error.code, error.message);
+    alert("Error: " + error.message);
+  } finally {
+    submitBtn.innerText = "Submit";
+    submitBtn.disabled = false;
+  }
 }
 
-function submitNGO(event) {
+// ---------- Submit Restaurant ----------
+async function submitRestaurant(event) {
   event.preventDefault();
 
   if (!currentUser) {
@@ -213,19 +259,50 @@ function submitNGO(event) {
     return;
   }
 
-  const data = {
-    email: currentUser.email,
-    role: selectedRole,
-    name: event.target[0].value,
-    address: event.target[1].value,
-    phone: event.target[2].value,
-    image: event.target[3].files[0]
-  };
+  const form = event.target;
 
-  console.log("NGO:", data);
+  const name    = form.querySelector('[name="name"]').value;
+  const address = form.querySelector('[name="address"]').value;
+  const phone   = form.querySelector('[name="phone"]').value;
+  const placeImageFile = form.querySelector('[name="placeImage"]').files[0];
+
+  const submitBtn = form.querySelector('.submit-btn');
+  submitBtn.innerText = "Uploading...";
+  submitBtn.disabled = true;
+
+  try {
+    console.log("📤 Uploading restaurant image...");
+    const placeImageURL = await uploadImageAndGetURL(placeImageFile, `restaurants/${currentUser.uid}`);
+
+    console.log("📝 Saving restaurant data...");
+    const restaurantRef = ref(database, `restaurants/${currentUser.uid}`);
+    await set(restaurantRef, {
+      uid: currentUser.uid,
+      email: currentUser.email,
+      role: selectedRole,
+      name,
+      address,
+      phone,
+      placeImageURL,
+      timestamp: Date.now()
+    });
+
+    console.log("✅ Restaurant saved!");
+    alert("Restaurant registered successfully!");
+    form.reset();
+    showSelection();
+
+  } catch (error) {
+    console.error("❌ Restaurant submission error:", error.code, error.message);
+    alert("Error: " + error.message);
+  } finally {
+    submitBtn.innerText = "Submit";
+    submitBtn.disabled = false;
+  }
 }
 
-function submitVolunteer(event) {
+// ---------- Submit NGO ----------
+async function submitNGO(event) {
   event.preventDefault();
 
   if (!currentUser) {
@@ -233,21 +310,49 @@ function submitVolunteer(event) {
     return;
   }
 
-  const data = {
-    email: currentUser.email,
-    role: selectedRole,
-    name: event.target[0].value,
-    phone: event.target[1].value,
-    driverImage: event.target[2].files[0],
-    license: event.target[3].files[0],
-    vehicleType: event.target[4].value,
-    capacity: event.target[5].value,
-    vehicleImage: event.target[6].files[0]
-  };
+  const form = event.target;
 
-  console.log("Volunteer:", data);
+  const name    = form.querySelector('[name="name"]').value;
+  const address = form.querySelector('[name="address"]').value;
+  const phone   = form.querySelector('[name="phone"]').value;
+  const placeImageFile = form.querySelector('[name="placeImage"]').files[0];
+
+  const submitBtn = form.querySelector('.submit-btn');
+  submitBtn.innerText = "Uploading...";
+  submitBtn.disabled = true;
+
+  try {
+    console.log("📤 Uploading NGO image...");
+    const placeImageURL = await uploadImageAndGetURL(placeImageFile, `ngos/${currentUser.uid}`);
+
+    console.log("📝 Saving NGO data...");
+    const ngoRef = ref(database, `ngos/${currentUser.uid}`);
+    await set(ngoRef, {
+      uid: currentUser.uid,
+      email: currentUser.email,
+      role: selectedRole,
+      name,
+      address,
+      phone,
+      placeImageURL,
+      timestamp: Date.now()
+    });
+
+    console.log("✅ NGO saved!");
+    alert("NGO registered successfully!");
+    form.reset();
+    showSelection();
+
+  } catch (error) {
+    console.error("❌ NGO submission error:", error.code, error.message);
+    alert("Error: " + error.message);
+  } finally {
+    submitBtn.innerText = "Submit";
+    submitBtn.disabled = false;
+  }
 }
 
+// Expose to global scope (called from HTML onclick)
 window.handleRoleSelection = handleRoleSelection;
 window.showForm = showForm;
 window.showSelection = showSelection;
