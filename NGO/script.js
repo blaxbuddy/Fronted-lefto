@@ -1,110 +1,70 @@
-const toggle = document.getElementById('requestToggle');
-const statusLabel = document.getElementById('statusLabel');
-const actionStatus = document.getElementById('actionStatus');
-const editDetailsLink = document.getElementById('editDetailsLink');
-const mapContainer = document.getElementById('mapContainer');
-const fullscreenIcon = document.getElementById('fullscreenIcon');
+const requestDonationBtn = document.getElementById('requestDonationBtn');
+const actionContainer = document.getElementById('actionContainer');
 const mainViewContainer = document.getElementById('mainViewContainer');
 
 const popupOverlay = document.getElementById('popupOverlay');
 const closePopupBtn = document.getElementById('closePopupBtn');
+
 const packageDistanceText = document.getElementById('packageDistance');
 const packageDetailsText = document.getElementById('packageDetailsText');
-const driverOtpPanel = document.getElementById('driverOtpPanel');
 const generatedOtpText = document.getElementById('generatedOtp');
+const mapContainer = document.getElementById('mapContainer');
+const fullscreenIcon = document.getElementById('fullscreenIcon');
 
-let isEditing = false;
-let setQuantity = "";
-let setUnit = "";
 let trackingInterval;
 
-// Toggle logic
-toggle.addEventListener('change', (e) => {
-    if (e.target.checked) {
-        if(mainViewContainer.classList.contains('visible')) {
-            statusLabel.innerText = "Online";
-            statusLabel.style.color = "var(--primary)";
-            actionStatus.innerText = "Food supply request is active.";
-        } else {
-            isEditing = false;
-            document.getElementById('foodQuantity').value = '';
-            popupOverlay.classList.add('active');
-            statusLabel.innerText = "Online";
-            statusLabel.style.color = "var(--primary)";
-            actionStatus.innerText = "Setting up food request...";
-        }
-    } else {
-        statusLabel.innerText = "Offline";
-        statusLabel.style.color = "var(--text-main)";
-        actionStatus.innerText = "Ready to receive? Go online to request food.";
-    }
+// Open Pop-up Menu
+requestDonationBtn.addEventListener('click', () => {
+    document.getElementById('foodQuantity').value = ''; 
+    popupOverlay.classList.add('active');
 });
 
-// Close Popup Logic (Red Cross Button)
+// Close Pop-up Menu
 closePopupBtn.addEventListener('click', () => {
     popupOverlay.classList.remove('active');
-    
-    if (!isEditing && !mainViewContainer.classList.contains('visible')) {
-        toggle.checked = false;
-        statusLabel.innerText = "Offline";
-        statusLabel.style.color = "var(--text-main)";
-        actionStatus.innerText = "Request cancelled.";
-    }
 });
 
-// Submit Requirement Flow
+// Submit Requirement & Show Map/OTP
 function submitRequirement() {
-    setQuantity = document.getElementById('foodQuantity').value;
-    setUnit = document.getElementById('foodUnit').value;
+    const setQuantity = document.getElementById('foodQuantity').value;
+    const setUnit = document.getElementById('foodUnit').value;
 
     if (setQuantity === "") {
         alert("Please specify food quantity.");
         return;
     }
 
-    if(isEditing) {
-        popupOverlay.classList.remove('active');
-        packageDetailsText.innerText = `Requesting: ${setQuantity} ${setUnit}`;
-        isEditing = false;
-        return;
-    }
-
-    // First time submission
+    // 1. Hide Overlay and the Central Action Button
     popupOverlay.classList.remove('active');
+    actionContainer.style.display = 'none';
+
+    // 2. Show the Main Map and Info View
     mainViewContainer.classList.add('visible');
-    editDetailsLink.classList.add('active'); 
     
+    // 3. Update the details text
     packageDetailsText.innerText = `Requesting: ${setQuantity} ${setUnit}`;
-    actionStatus.innerText = "Request sent. Generating PIN and assigning driver...";
     
-    // Generate Long-lasting OTP after submission
+    // 4. Generate Long-lasting OTP
     generateDriverOTP();
-    driverOtpPanel.style.display = "flex"; 
     
+    // 5. Start Mock Tracking
     setTimeout(() => {
-        actionStatus.innerText = "Driver assigned! Food is on the way.";
         startMockTracking();
-    }, 2000);
+    }, 1500);
 }
 
-// Generate the Long-Lasting OTP for the Driver
+// Generate the Static PIN
 function generateDriverOTP() {
     const randomOtp = Math.floor(1000 + Math.random() * 9000);
     generatedOtpText.innerText = randomOtp;
 }
 
-// Edit details link logic
-editDetailsLink.addEventListener('click', (e) => {
-    e.preventDefault();
-    isEditing = true;
-    popupOverlay.classList.add('active');
-});
-
-// Mock tracking logic
+// Mock Tracking Logic
 function startMockTracking() {
     packageDistanceText.innerText = "Distance: 2.1 km";
     clearInterval(trackingInterval);
     let distance = 2.1;
+    
     trackingInterval = setInterval(() => {
         if(distance > 0.05) {
             distance -= 0.05;
@@ -125,3 +85,16 @@ function toggleFullscreen() {
         fullscreenIcon.innerText = "fullscreen";
     }
 }
+
+// Subtle Mouse Parallax for Background Doodles
+document.addEventListener("DOMContentLoaded", () => {
+    const doodles = document.querySelectorAll('.doodle');
+    document.addEventListener('mousemove', (e) => {
+        const x = e.clientX / window.innerWidth;
+        doodles.forEach((doodle, index) => {
+            const speed = (index + 1) * 15; 
+            const xOffset = (x * speed) - (speed / 2);
+            doodle.style.transform = `translateX(${xOffset}px)`;
+        });
+    });
+});
