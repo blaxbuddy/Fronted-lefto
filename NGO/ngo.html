@@ -3,28 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NGO Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>NGO Dashboard - Lefto Food Rescue</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="ngo_styles.css">
 </head>
 <body>
 
-    <header class="dashboard-header">
-        <img class="header-logo" src="https://via.placeholder.com/50/4caf50/c8e6c9?text=Logo" alt="NGO Logo">
-        
-        <div class="toggle-container">
-            <span class="toggle-label" id="statusLabel">Offline</span>
-            <label class="switch">
-                <input type="checkbox" id="requestToggle">
-                <span class="slider"></span>
-            </label>
-        </div>
+    <div class="doodle doodle-leaf">🍃</div>
+    <div class="doodle doodle-heart">💚</div>
+    <div class="doodle doodle-handshake">🤝</div>
+    <div class="doodle doodle-globe">🌍</div>
 
-        <a class="edit-details" id="editDetailsLink">Edit Details</a>
+    <header class="top-header">
+        <div class="logo-container">
+            <img src="cropped_circle_image.png" alt="Lefto Logo" class="brand-logo">
+            <span class="brand-text">Lefto</span>
+        </div>
     </header>
 
-    <div class="status-text" id="actionStatus">Ready to receive? Go online to request food.</div>
+    <div class="action-container" id="actionContainer">
+        <button class="request-btn" id="requestDonationBtn">Request for Donation !</button>
+    </div>
 
     <main class="main-view" id="mainViewContainer">
         <div class="map-wrapper" id="mapContainer">
@@ -47,7 +47,7 @@
                 <span id="packageDistance">Distance: Calculating...</span>
             </div>
             
-            <div class="otp-display-panel" id="driverOtpPanel" style="display: none;">
+            <div class="otp-display-panel" id="driverOtpPanel">
                 <span class="otp-title">Provide this PIN to the driver:</span>
                 <span class="otp-number" id="generatedOtp">----</span>
             </div>
@@ -55,7 +55,6 @@
     </main>
 
     <div class="overlay" id="popupOverlay">
-        
         <div class="pop-up-card" id="popupRequirement">
             <button class="close-btn" id="closePopupBtn">
                 <span class="material-icons">close</span>
@@ -66,13 +65,11 @@
             <div class="input-group">
                 <input type="number" class="input-field" id="foodQuantity" placeholder="e.g. 50">
                 <select class="dropdown-select" id="foodUnit">
-                    <option value="kg">kg</option>
                     <option value="per serving">per serving</option>
                 </select>
             </div>
-            <button class="btn btn-submit" onclick="submitRequirement()">Submit Request</button>
+            <button class="btn-submit" onclick="submitRequirement()">Submit Request</button>
         </div>
-
     </div>
 
     <script src="ngo_script.js"></script>
