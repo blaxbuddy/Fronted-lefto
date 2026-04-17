@@ -110,13 +110,20 @@ input:checked + .slider:before {
 .map-wrapper {
     position: relative;
     width: 100%;
-    max-width: 600px;
-    height: 350px;
+    max-width: 900px;
+    min-height: 620px;
     border-radius: 20px;
     background: var(--bg-color);
     box-shadow: 10px 10px 20px var(--neu-dark), -10px -10px 20px var(--neu-light);
     overflow: hidden;
     transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.map-wrapper iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: none;
 }
 
 .map-image {
