@@ -1,4 +1,3 @@
-// DOM Elements
 const toggle = document.getElementById('requestToggle');
 const statusLabel = document.getElementById('statusLabel');
 const actionStatus = document.getElementById('actionStatus');
@@ -8,56 +7,52 @@ const fullscreenIcon = document.getElementById('fullscreenIcon');
 const mainViewContainer = document.getElementById('mainViewContainer');
 
 const popupOverlay = document.getElementById('popupOverlay');
-const popupRequirement = document.getElementById('popupRequirement');
-const popupConfirmOTP = document.getElementById('popupConfirmOTP');
-const popupOnTheWay = document.getElementById('popupOnTheWay');
-const confirmText = document.getElementById('confirmText');
+const closePopupBtn = document.getElementById('closePopupBtn');
 const packageDistanceText = document.getElementById('packageDistance');
+const packageDetailsText = document.getElementById('packageDetailsText');
+const driverOtpPanel = document.getElementById('driverOtpPanel');
+const generatedOtpText = document.getElementById('generatedOtp');
 
 let isEditing = false;
 let setQuantity = "";
 let setUnit = "";
+let trackingInterval;
 
 // Toggle logic
 toggle.addEventListener('change', (e) => {
     if (e.target.checked) {
-        // If main map is visible, just say request is active
         if(mainViewContainer.classList.contains('visible')) {
             statusLabel.innerText = "Online";
             statusLabel.style.color = "var(--primary)";
             actionStatus.innerText = "Food supply request is active.";
         } else {
-            // Flow begins: show requirement form
+            isEditing = false;
+            document.getElementById('foodQuantity').value = '';
             popupOverlay.classList.add('active');
             statusLabel.innerText = "Online";
             statusLabel.style.color = "var(--primary)";
-            actionStatus.innerText = "Setting up food request flow...";
+            actionStatus.innerText = "Setting up food request...";
         }
     } else {
         statusLabel.innerText = "Offline";
         statusLabel.style.color = "var(--text-main)";
         actionStatus.innerText = "Ready to receive? Go online to request food.";
-        // In a real app, this would deactivate tracking. Here, we just keep the map but change status.
-        mainViewContainer.classList.add('visible'); // keep map visible if once it was
-        actionStatus.innerText = "Food request deactivated. Driver tracking paused.";
     }
 });
 
-// OTP inputs auto-advance
-document.querySelectorAll('.otp-box').forEach((input, index) => {
-    input.addEventListener('input', () => {
-        if (input.value.length === 1 && index < 3) {
-            document.querySelectorAll('.otp-box')[index + 1].focus();
-        }
-    });
-    input.addEventListener('keydown', (e) => {
-        if (e.key === 'Backspace' && index > 0 && input.value === '') {
-            document.querySelectorAll('.otp-box')[index - 1].focus();
-        }
-    });
+// Close Popup Logic (Red Cross Button)
+closePopupBtn.addEventListener('click', () => {
+    popupOverlay.classList.remove('active');
+    
+    if (!isEditing && !mainViewContainer.classList.contains('visible')) {
+        toggle.checked = false;
+        statusLabel.innerText = "Offline";
+        statusLabel.style.color = "var(--text-main)";
+        actionStatus.innerText = "Request cancelled.";
+    }
 });
 
-// Flow Step 1: Submit Requirement
+// Submit Requirement Flow
 function submitRequirement() {
     setQuantity = document.getElementById('foodQuantity').value;
     setUnit = document.getElementById('foodUnit').value;
@@ -67,57 +62,35 @@ function submitRequirement() {
         return;
     }
 
-    // In mock, submitting the requirement while editing just updates the main view.
     if(isEditing) {
-        alert(`Details Updated: ${setQuantity} ${setUnit}`);
         popupOverlay.classList.remove('active');
-        // Could update a field here if we had set one for quantity display.
+        packageDetailsText.innerText = `Requesting: ${setQuantity} ${setUnit}`;
         isEditing = false;
-        actionStatus.innerText = "Details updated. Delivery flow adjusted.";
         return;
     }
 
-    // Normal flow: close requirement form, show OTP confirm
-    popupRequirement.style.display = 'none';
-    popupConfirmOTP.style.display = 'flex';
-    confirmText.innerText = `Delivery will arrive soon for: ${setQuantity} ${setUnit}`;
-}
-
-// Flow Step 2: Confirm OTP
-function confirmOTP() {
-    const inputs = document.querySelectorAll('.otp-box');
-    let otpVal = "";
-    inputs.forEach(input => otpVal += input.value);
-
-    if (otpVal.length !== 4) {
-        alert("Please enter the 4-digit OTP.");
-        return;
-    }
-
-    // Mock check: any 4 digits work.
-    popupConfirmOTP.style.display = 'none';
-    popupOnTheWay.style.display = 'flex';
-}
-
-// Flow Step 3: Click OK and Show Map View
-function closeAllAndShowMap() {
-    // Clear inputs for next flow
-    document.getElementById('foodQuantity').value = '';
-    document.querySelectorAll('.otp-box').forEach(input => input.value = '');
-    
-    // Hide all popups
+    // First time submission
     popupOverlay.classList.remove('active');
-    popupOnTheWay.style.display = 'none';
-    // Also reset displays in case flow is re-triggered
-    popupRequirement.style.display = 'flex';
-    
-    // Show main map/info view
     mainViewContainer.classList.add('visible');
-    editDetailsLink.classList.add('active'); // Activate 'Edit' link
-    actionStatus.innerText = "Food is on the way. Live driver tracking active.";
+    editDetailsLink.classList.add('active'); 
     
-    // Update mock tracking info
-    startMockTracking();
+    packageDetailsText.innerText = `Requesting: ${setQuantity} ${setUnit}`;
+    actionStatus.innerText = "Request sent. Generating PIN and assigning driver...";
+    
+    // Generate Long-lasting OTP after submission
+    generateDriverOTP();
+    driverOtpPanel.style.display = "flex"; 
+    
+    setTimeout(() => {
+        actionStatus.innerText = "Driver assigned! Food is on the way.";
+        startMockTracking();
+    }, 2000);
+}
+
+// Generate the Long-Lasting OTP for the Driver
+function generateDriverOTP() {
+    const randomOtp = Math.floor(1000 + Math.random() * 9000);
+    generatedOtpText.innerText = randomOtp;
 }
 
 // Edit details link logic
@@ -125,15 +98,9 @@ editDetailsLink.addEventListener('click', (e) => {
     e.preventDefault();
     isEditing = true;
     popupOverlay.classList.add('active');
-    popupRequirement.style.display = 'flex';
-    popupConfirmOTP.style.display = 'none';
-    popupOnTheWay.style.display = 'none';
-    // Clear inputs to prompt new setting. In real app, might pre-fill.
-    document.getElementById('foodQuantity').value = '';
 });
 
-// Mock tracking logic to show movement sense
-let trackingInterval;
+// Mock tracking logic
 function startMockTracking() {
     packageDistanceText.innerText = "Distance: 2.1 km";
     clearInterval(trackingInterval);
@@ -143,7 +110,7 @@ function startMockTracking() {
             distance -= 0.05;
             packageDistanceText.innerText = `Distance: ${distance.toFixed(2)} km`;
         } else {
-            packageDistanceText.innerText = "Distance: Driver is at location!";
+            packageDistanceText.innerText = "Distance: Driver is at location! Please provide PIN.";
             clearInterval(trackingInterval);
         }
     }, 1000);
