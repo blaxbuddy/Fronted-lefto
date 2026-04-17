@@ -106,3 +106,35 @@ function toggleFullscreen() {
         fullscreenIcon.innerText = "fullscreen";
     }
 }
+
+
+
+//for floating of icons and 
+document.addEventListener("DOMContentLoaded", () => {
+    // --- Mouse Parallax Effect for Doodles ---
+    const doodles = document.querySelectorAll('.doodle');
+
+    document.addEventListener('mousemove', (e) => {
+        const x = e.clientX / window.innerWidth;
+        const y = e.clientY / window.innerHeight;
+
+        doodles.forEach((doodle, index) => {
+            const speed = (index + 1) * 15; 
+            const xOffset = (x * speed) - (speed / 2);
+            
+            // Apply horizontal offset. Vertical is handled by CSS animations
+            doodle.style.transform = `translateX(${xOffset}px)`;
+        });
+    });
+});
+
+// --- Card Selection Logic ---
+// Allows you to click the cards and move the active (dark border) state
+function selectCard(clickedCard) {
+    // Remove 'active' class from all cards
+    const allCards = document.querySelectorAll('.role-card');
+    allCards.forEach(card => card.classList.remove('active'));
+
+    // Add 'active' class to the card that was clicked
+    clickedCard.classList.add('active');
+}
