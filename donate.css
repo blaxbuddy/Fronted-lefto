@@ -1,70 +1,45 @@
-body {
-  font-family: Arial, sans-serif;
-  background: #f4f6f8;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lefto - Donate Food</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
 
-.container {
-  background: white;
-  padding: 25px;
-  width: 320px;
-  border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
+<div class="container">
+  <h2>Donate Food</h2>
 
-h2 {
-  text-align: center;
-  margin-bottom: 20px;
-}
+  <form id="donationForm">
+    
+    <label>Restaurant Name</label>
+    <input type="text" id="restaurantName" required>
 
-label {
-  font-size: 14px;
-  margin-top: 10px;
-  display: block;
-}
+    <label>Food Item</label>
+    <input type="text" id="foodItem" required>
 
-input {
-  width: 100%;
-  padding: 8px;
-  margin-top: 5px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
+    <label>Quantity</label>
+    <input type="number" id="quantity" required>
 
-button {
-  width: 100%;
-  padding: 10px;
-  margin-top: 15px;
-  background: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-}
+    <label>Upload Image</label>
+    <input type="file" id="foodImage" accept="image/*" required>
 
-button:hover {
-  background: #45a049;
-}
+    <label>Pickup Time</label>
+    <input type="datetime-local" id="pickupTime" required>
 
-#otpBox {
-  margin-top: 20px;
-  text-align: center;
-  background: #e8f5e9;
-  padding: 15px;
-  border-radius: 8px;
-}
+    <button type="submit">Generate OTP & Submit</button>
+  </form>
 
-#otp {
-  font-size: 22px;
-  font-weight: bold;
-  color: #2e7d32;
-}
+  <div id="otpBox" class="hidden">
+    <h3>Your Pickup OTP</h3>
+    <p id="otp"></p>
+    <small>Share this OTP with the volunteer at pickup</small>
+  </div>
 
-.hidden {
-  display: none;
-}
+</div>
 
+<script src="script.js"></script>
+</body>
+</html>
+ 
+  
